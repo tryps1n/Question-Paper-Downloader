@@ -1,6 +1,9 @@
+import os
+from requests.exceptions import HTTPError
 import webbrowser
 import requests
 import urllib
+from tkinter import Tk, messagebox
 
 def readFile():
     f = open('logs.txt', 'r')
@@ -12,7 +15,6 @@ def readFile():
     return(params)
 
 def searchForUrl(examination, sub, year, season, papertype, papernumber):
-    subjects = ['Physics', 'Biology', 'Chemistry', 'Mathematics D', 'Mathematics-Additional', 'Computer Science']
     sub_codes_olevel = {
         'Physics': '5054', 
         'Biology': '5090', 
@@ -23,7 +25,7 @@ def searchForUrl(examination, sub, year, season, papertype, papernumber):
     }
     base_url = 'https://papers.gceguide.com/'
     if sub == 'Mathematics-D':
-        sub.replace('-', ' ')
+        sub = sub.replace('-', ' ')
     subj = f'{sub} ({sub_codes_olevel[sub]})'
 
     url = base_url + urllib.parse.quote(f'{examination}/{subj}/{year}/{(sub_codes_olevel[sub])}_{season}{year[2:4]}_{papertype}_{papernumber}.pdf', safe='()/~')
@@ -41,5 +43,12 @@ def download_file(url):
 
 params = readFile()
 url = searchForUrl(params[0], params[1], params[4], params[2], params[3], params[5])
-download_file(url)
-webbrowser.open(url)
+try:
+    if messagebox.askyesno('Question paper found', 'Your question paper has been found, do you wish to proceed?'):
+        download_file(url)
+        webbrowser.open(url)
+except HTTPError:  
+    if messagebox.askretrycancel("Error", "Question paper not found. Try again?"):
+        print(url)
+        os.system('python main.py')
+
